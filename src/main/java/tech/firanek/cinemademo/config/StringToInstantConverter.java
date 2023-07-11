@@ -1,4 +1,4 @@
-package tech.firanek.cinemademo.misc;
+package tech.firanek.cinemademo.config;
 
 import lombok.NonNull;
 import org.springframework.core.convert.converter.Converter;

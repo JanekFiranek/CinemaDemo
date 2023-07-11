@@ -2,6 +2,7 @@ package tech.firanek.cinemademo.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,12 +18,8 @@ import java.time.Duration;
 @ToString
 public class Movie {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
     private Duration duration;
-    public Movie(String title, Duration duration) {
-        this.title = title;
-        this.duration = duration;
-    }
 }

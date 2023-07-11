@@ -16,9 +16,9 @@ public class Screening {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Instant time;
-    @OneToOne
+    @ManyToOne
     private Movie movie;
-    @OneToOne
+    @ManyToOne
     private Room room;
     public Screening(Instant time, Movie movie, Room room) {
         this.time = time;
