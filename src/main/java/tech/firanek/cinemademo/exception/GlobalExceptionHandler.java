@@ -1,5 +1,6 @@
 package tech.firanek.cinemademo.exception;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -37,4 +38,15 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(Instant.now(), ex.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(NumberFormatException.class)
+    public ErrorResponse handleRequestNumberFormatError(NumberFormatException ex) {
+        return new ErrorResponse(Instant.now(), ex.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ErrorResponse handleRequestEntityNotFoundError(EntityNotFoundException ex) {
+        return new ErrorResponse(Instant.now(), ex.getMessage());
+    }
 }

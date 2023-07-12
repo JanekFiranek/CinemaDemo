@@ -20,11 +20,10 @@ public class Screening {
     private Movie movie;
     @ManyToOne
     private Room room;
+
     public Screening(Instant time, Movie movie, Room room) {
         this.time = time;
         this.movie = movie;
         this.room = room;
     }
-
-
 }

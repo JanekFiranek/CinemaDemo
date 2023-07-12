@@ -54,6 +54,7 @@ class CinemaControllerTest {
         mvc.perform(get("/screenings"))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Required request parameter 'from' for method parameter type Instant is not present"))
                 .andReturn();
     }
 
@@ -61,13 +62,13 @@ class CinemaControllerTest {
     void shouldReturnScreeningsBetweenTimestamps() throws Exception {
         mvc.perform(get("/screenings")
                         .accept(MediaType.APPLICATION_JSON)
-                        .param("from", "1688714100")
-                        .param("to", "1688729400"))
+                        .param("from", "1814937300")
+                        .param("to", "1814952600"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("size()").value(3))
                 .andExpect(jsonPath("$[0].movie.title").value("Ęśąćż"))
-                .andExpect(jsonPath("$[1].movie.title").value("Ferdydurke"))
+                .andExpect(jsonPath("$[1].movie.title").value("Komedia romantyczna z Karolakiem"))
                 .andExpect(jsonPath("$[2].movie.title").value("NullPointerException: the movie"))
                 .andReturn();
     }
@@ -76,8 +77,8 @@ class CinemaControllerTest {
     void shouldReturnErrorWhenNonexistentScreeningIdRequested() throws Exception {
         mvc.perform(get("/screenings/0"))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("No entity associated with provided id 0"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Unable to find tech.firanek.cinemademo.entity.Screening with id 0"))
                 .andReturn();
     }
 
@@ -99,10 +100,9 @@ class CinemaControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.amountToPay").value(25D))
-                .andExpect(jsonPath("$.expirationDate").value("2023-07-07T09:00:00Z"))
+                .andExpect(jsonPath("$.expirationDate").value("2027-07-07T09:00:00Z"))
                 .andReturn();
     }
-
 
     @Test
     void shouldReturnErrorWhenNonexistentSeatNumberProvided() throws Exception {
@@ -111,7 +111,7 @@ class CinemaControllerTest {
                         .content(this.reservationJson("Maria", "Skłodowska-Curie", 1L, new Ticket(TicketType.ADULT, 1, 100))))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Provided an inexistent seat number"))
+                .andExpect(jsonPath("$.message").value("Provided an nonexistent seat number"))
                 .andReturn();
     }
 
@@ -122,10 +122,9 @@ class CinemaControllerTest {
                         .content(this.reservationJson("Maria", "Skłodowska-Curie", 1L, new Ticket(TicketType.ADULT, 100, 1))))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Provided an inexistent row number"))
+                .andExpect(jsonPath("$.message").value("Provided an nonexistent row number"))
                 .andReturn();
     }
-
 
     @Test
     void shouldReturnErrorWhenNonexistentScreeningIdProvided() throws Exception {
@@ -168,7 +167,7 @@ class CinemaControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.amountToPay").value(25D))
-                .andExpect(jsonPath("$.expirationDate").value("2023-07-07T09:00:00Z"))
+                .andExpect(jsonPath("$.expirationDate").value("2027-07-07T09:00:00Z"))
                 .andReturn();
 
         mvc.perform(post("/reservations")
@@ -179,7 +178,6 @@ class CinemaControllerTest {
                 .andExpect(jsonPath("$.message").value("Provided a seat that is already booked"))
                 .andReturn();
     }
-
 
     @Test
     void shouldReturnErrorWhenReservingTheSameSeatMultipleTimes() throws Exception {

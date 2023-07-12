@@ -2,7 +2,6 @@ package tech.firanek.cinemademo.service;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ValidationException;
 import org.springframework.stereotype.Service;
 import tech.firanek.cinemademo.data.ReservationRequest;
@@ -15,6 +14,8 @@ import tech.firanek.cinemademo.entity.Ticket;
 import tech.firanek.cinemademo.repository.ReservationRepository;
 import tech.firanek.cinemademo.repository.ScreeningRepository;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class CinemaService {
+
     private final ReservationRepository reservations;
     private final ScreeningRepository screenings;
 
@@ -31,27 +33,26 @@ public class CinemaService {
         this.screenings = screenings;
     }
 
-
     public ScreeningResponse handleScreeningResponse(final String id) {
-        try {
-            final Screening screening = this.screenings.getReferenceById(Long.parseLong(id));
+        final Screening screening = this.screenings.getReferenceById(Long.parseLong(id));
+        final Room room = screening.getRoom();
 
-            final Room room = screening.getRoom();
-            final Multimap<Integer, Integer> seats = ArrayListMultimap.create();
-            for (int row = 1; row <= room.getNumberOfRows(); row++) {
-                for (int seat = 1; seat <= room.getSeatsPerRow(); seat++) {
-                    seats.put(row, seat);
-                }
+        final Multimap<Integer, Integer> seats = ArrayListMultimap.create();
+        for (int row = 1; row <= room.getNumberOfRows(); row++) {
+            for (int seat = 1; seat <= room.getSeatsPerRow(); seat++) {
+                seats.put(row, seat);
             }
-            for (Ticket ticket : this.getAllScreeningTickets(screening)) {
-                seats.remove(ticket.getRow(), ticket.getSeat());
-            }
-            return new ScreeningResponse(room, seats.asMap());
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Provided id is not a number.");
-        } catch (EntityNotFoundException e) {
-            throw new ValidationException("No entity associated with provided id " + id);
         }
+
+        for (Ticket ticket : this.getAllScreeningTickets(screening)) {
+            seats.remove(ticket.getRow(), ticket.getSeat());
+        }
+
+        return new ScreeningResponse(room, seats.asMap());
+    }
+
+    public List<Screening> handleScreeningRequest(final Instant from, final Instant to) {
+        return this.screenings.findAllByTimeBetweenOrderByMovieTitleAscTimeAsc(from, to);
     }
 
     public ReservationResponse handleReservationResponse(final ReservationRequest reservationRequest) {
@@ -60,6 +61,10 @@ public class CinemaService {
             final Room room = screening.getRoom();
             final Set<Ticket> alreadyBoughtTickets = this.getAllScreeningTickets(screening);
 
+            if (screening.getTime().minus(Duration.ofMinutes(15)).isBefore(Instant.now())) {
+                throw new ValidationException("Cannot reserve sooner than 15 minutes before screening");
+            }
+
             if (reservationRequest.getTickets().stream()
                     .collect(Collectors.groupingBy(Ticket::getSeat))
                     .values().stream().anyMatch(n -> n.size() > 1)) {
@@ -67,13 +72,12 @@ public class CinemaService {
             }
 
             for (Ticket ticket : reservationRequest.getTickets()) {
-
                 if (ticket.getRow() > room.getNumberOfRows() || ticket.getRow() <= 0) {
-                    throw new ValidationException("Provided an inexistent row number");
+                    throw new ValidationException("Provided an nonexistent row number");
                 }
 
                 if (ticket.getSeat() > room.getSeatsPerRow() || ticket.getSeat() <= 0) {
-                    throw new ValidationException("Provided an inexistent seat number");
+                    throw new ValidationException("Provided an nonexistent seat number");
                 }
 
                 if (alreadyBoughtTickets.stream()
@@ -119,8 +123,7 @@ public class CinemaService {
                 return false;
             }
         }
+
         return true;
     }
-
-
 }
