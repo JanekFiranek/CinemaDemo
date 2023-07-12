@@ -1,0 +1,11 @@
+services:
+  database:
+    image: 'mariadb:lts'
+    restart: 'always'
+    ports:
+      - '3306'
+    environment:
+      - 'MARIADB_ROOT_PASSWORD=example'
+      - 'MARIADB_DATABASE=cinema'
+      - 'MARIADB_USER=admin'
+      - 'MARIADB_PASSWORD=admin'
